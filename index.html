@@ -644,6 +644,23 @@
                 transform: translateY(0);
             }
         }
+
+        .create-account-link {
+            display: block;
+            text-align: center;
+            color: #0066cc;
+            text-decoration: underline;
+            font-size: 0.9rem;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .create-account-link:hover {
+            color: #0052a3;
+            transform: scale(1.02);
+        }
     </style>
 </head>
 <body>
@@ -694,11 +711,31 @@
                     <span class="password-toggle" id="passwordToggle">👁️</span>
                 </div>
             </div>
+            <a id="createAdminBtn" class="create-account-link">➕ Create Your Own Admin Account</a>
             <div class="remember-container">
                 <input type="checkbox" id="rememberCheckbox">
                 <label for="rememberCheckbox">Remember me</label>
             </div>
             <button id="submitPassword" class="submit-btn">Submit</button>
+        </div>
+    </div>
+
+    <div id="createAdminModal" class="modal">
+        <div class="modal-content">
+            <button class="back-btn" style="background-color: black; color: white; border: none; padding: 5px 10px; font-size: 12px; cursor: pointer; border-radius: 5px;">&larr; Back</button>
+            <h2 style="margin-bottom: 20px;">Create Admin Account</h2>
+            <div class="input-container">
+                <input type="email" id="newAdminEmail" class="credential-input" placeholder="Email">
+                <div class="password-container">
+                    <input type="password" id="newAdminPassword" class="credential-input" placeholder="Password">
+                    <span class="password-toggle" id="newPasswordToggle">👁️</span>
+                </div>
+                <div class="password-container">
+                    <input type="password" id="confirmAdminPassword" class="credential-input" placeholder="Confirm Password">
+                    <span class="password-toggle" id="confirmPasswordToggle">👁️</span>
+                </div>
+            </div>
+            <button id="createAccountBtn" class="submit-btn">Create Account</button>
         </div>
     </div>
 
@@ -740,6 +777,9 @@
             })
             .catch(error => console.error('Error pre-fetching names:', error));
 
+        // Add this after Firebase initialization
+        const excludedButtons = [4,5,6,7,8,9,10]; // Global excludedButtons array
+
         document.addEventListener('DOMContentLoaded', function() {
             const quotes = [
                 "Build your dreams, one property at a time.",
@@ -773,7 +813,7 @@
             let currentRole = '';
 
             telecallerBtn.addEventListener('click', function() {
-                const excludedButtons = [3,4,5,6,7,8,9,10]; // Add any numbers you want to exclude here, e.g., [7, 3, 5]
+                const excludedButtons = [,4,5,6,7,8,9,10]; // Add any numbers you want to exclude here, e.g., [7, 3, 5]
                 const telecallerModal = document.createElement('div');
                 telecallerModal.className = 'modal';
                 telecallerModal.style.display = 'block';
@@ -873,136 +913,45 @@
                 }
             });
 
-            submitPassword.addEventListener('click', async function() {
+            submitPassword.addEventListener('click', function() {
                 const email = emailInput.value;
                 const password = passwordInput.value;
 
+                // First check if it's the default admin
                 if (email === 'admin@gmail.com' && password === 'admin@123') {
-                    // Hide login modal
+                    handleAdminLogin();
+                    return;
+                }
+
+                // Get missing numbers to create the admin key for verification
+                const allNumbers = Array.from({length: 10}, (_, i) => i + 1);
+                const missingNumbers = allNumbers.filter(num => !excludedButtons.includes(num));
+                const adminKey = `admin${missingNumbers.join('-')}password`;
+
+                // Check custom admin credentials
+                const adminRef = firebase.database().ref('adminCredentials');
+                adminRef.child(adminKey).once('value')
+                    .then((snapshot) => {
+                        if (snapshot.exists()) {
+                            const adminData = snapshot.val();
+                            if (adminData.email === email && adminData.password === password) {
+                                handleAdminLogin();
+                            } else {
+                                alert('Invalid credentials');
+                            }
+                        } else {
+                            alert('Admin account not found');
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error checking admin credentials:', error);
+                        alert('Error checking credentials');
+                    });
+
+                function handleAdminLogin() {
                     modal.style.display = 'none';
                     
-                    // Pre-fetch names before showing manager modal
-                    try {
-                        const snapshot = await namesRef.once('value');
-                        const names = snapshot.val() || {};
-                        // Create and show manager modal with pre-fetched data
-                        const managerModal = document.createElement('div');
-                        managerModal.className = 'modal';
-                        managerModal.style.display = 'block';
-                        
-                        const excludedButtons = [3,4,5,6,7,8,9,10]; // Specify buttons to exclude if needed
-                        
-                        managerModal.innerHTML = `
-                            ${editStyles}
-                            <div class="modal-content">
-                                <button class="back-button" style="position: absolute; top: 15px; left: 15px; background: black; border: none; cursor: pointer; color: white; font-size: 16px; font-weight: 500; padding: 5px 10px; border-radius: 5px;">
-                                    ← Back
-                                </button>
-                                <h2>Select Telecaller</h2>
-                                <div style="display: flex; flex-direction: column; gap: 20px;">
-                                    ${Array.from({ length: 10 }, (_, i) => {
-                                        const number = i + 1;
-                                        if (excludedButtons.includes(number)) return '';
-                                        
-                                        const nameKey = `telecaller${getNumberWord(number)}`;
-                                        const storedName = names[nameKey] || `Telecaller ${number}`;
-                                        
-                                        return `
-                                            <div class="manager-button-container">
-                                                <button id="admin${number}Btn" class="manager-btn">
-                                                    <span class="button-number">${number}.</span>
-                                                    <span id="admin${number}Name">${storedName}</span>
-                                                </button>
-                                                <span class="edit-icon" id="editAdmin${number}">
-                                                    <img src="images/editicon.png" alt="Edit" style="width: 33px; height: 33px;">
-                                                </span>
-                                            </div>
-                                        `;
-                                    }).join('')}
-                                </div>
-                                <div style="text-align: center; margin-top: 20px;">
-                                    <button class="save-button">Save</button>
-                                </div>
-                            </div>
-                        `;
-                        
-                        document.body.appendChild(managerModal);
-
-                        // Add back button handler
-                        managerModal.querySelector('.back-button').addEventListener('click', () => {
-                            managerModal.remove();
-                        });
-
-                        // Make names editable
-                        for(let i = 1; i <= 10; i++) {
-                            if (!excludedButtons.includes(i)) {
-                                makeEditable(`admin${i}Name`, `editAdmin${i}`);
-                            }
-                        }
-
-                        // Add save button functionality
-                        managerModal.querySelector('.save-button').addEventListener('click', async () => {
-                            try {
-                                const updatedNames = {};
-                                for(let i = 1; i <= 10; i++) {
-                                    if (!excludedButtons.includes(i)) {
-                                        const nameElement = document.getElementById(`admin${i}Name`);
-                                        if (nameElement) {
-                                            updatedNames[`telecaller${getNumberWord(i)}`] = nameElement.textContent;
-                                        }
-                                    }
-                                }
-                                await namesRef.update(updatedNames);
-                                alert('Names saved successfully!');
-                            } catch (error) {
-                                console.error('Error saving names:', error);
-                                alert('Failed to save names. Please try again.');
-                            }
-                        });
-
-                        // Add click handlers for admin buttons
-                        for(let i = 1; i <= 10; i++) {
-                            if (!excludedButtons.includes(i)) {
-                                const button = document.getElementById(`admin${i}Btn`);
-                                if (button) {
-                                    button.addEventListener('click', async () => {
-                                        const adminNumber = i.toString();
-                                        const adminEmail = `admin${adminNumber}@gmail.com`;
-                                        const telecallerEmail = `telecaller${adminNumber}@gmail.com`;
-                                        
-                                        // Set localStorage values first
-                                        localStorage.setItem('selectedTelecaller', telecallerEmail);
-                                        localStorage.setItem('adminEmail', adminEmail);
-                                        localStorage.setItem('isManager', 'true');
-                                        localStorage.setItem('selectedManagerName', document.getElementById(`admin${adminNumber}Name`).textContent);
-                                        
-                                        // Open dashboard immediately
-                                        const dashboardWindow = window.open('maindashboard.html', '_blank');
-                                        
-                                        // Authenticate in background
-                                        try {
-                                            await firebase.auth().signInWithEmailAndPassword(adminEmail, 'admin@123');
-                                            managerModal.remove();
-                                        } catch (authError) {
-                                            console.error('Auth error:', authError);
-                                            if (authError.code === 'auth/user-not-found' || 
-                                                authError.code === 'auth/wrong-password' ||
-                                                authError.code === 'auth/invalid-email') {
-                                                dashboardWindow.close();
-                                                alert("Authentication failed. Please try again.");
-                                            }
-                                        }
-                                    });
-                                }
-                            }
-                        }
-
-                    } catch (error) {
-                        console.error('Error fetching names:', error);
-                        alert('Failed to load telecaller names. Please try again.');
-                    }
-
-                    // Handle remember me checkbox
+                    // Handle remember me
                     if (rememberCheckbox.checked) {
                         localStorage.setItem('rememberedManagerEmail', email);
                         localStorage.setItem('rememberedManagerPassword', password);
@@ -1010,8 +959,9 @@
                         localStorage.removeItem('rememberedManagerEmail');
                         localStorage.removeItem('rememberedManagerPassword');
                     }
-                } else {
-                    alert("Invalid credentials. Access denied.");
+
+                    // Show manager selection modal with excluded buttons
+                    showManagerSelectionModal();
                 }
             });
 
@@ -1187,203 +1137,128 @@
                 });
             }
 
-            function showManagerSelectionModal() {
-                namesRef.once('value')
-                    .then(snapshot => {
-                        const names = snapshot.val() || {};
+            async function showManagerSelectionModal() {
+                try {
+                    const snapshot = await namesRef.once('value');
+                    const names = snapshot.val() || {};
+                    const managerModal = document.createElement('div');
+                    managerModal.className = 'modal';
+                    managerModal.style.display = 'block';
+                    
+                    // Define buttons to exclude
+                    const excludedButtons = [,4,5,6,7,8,9,10];
+                    
+                    // Filter out excluded buttons when creating the HTML
+                    const buttonsHtml = Array.from({ length: 10 }, (_, i) => {
+                        const number = i + 1;
+                        if (excludedButtons.includes(number)) return ''; // Skip excluded buttons
                         
-                        const managerModal = document.createElement('div');
-                        managerModal.className = 'modal';
-                        managerModal.style.display = 'block';
+                        const nameKey = `telecaller${getNumberWord(number)}`;
+                        const storedName = names[nameKey] || `Telecaller ${number}`;
                         
-                        managerModal.innerHTML = `
-                            ${editStyles}
-                            <div class="modal-content">
-                                <button class="back-button" style="position: absolute; top: 15px; left: 15px; background: black; border: none; cursor: pointer; color: white; font-size: 16px; font-weight: 500; padding: 5px 10px; border-radius: 5px;">
-                                    ← Back
+                        return `
+                            <div class="manager-button-container">
+                                <button id="admin${number}Btn" class="manager-btn">
+                                    <span class="button-number">${number}.</span>
+                                    <span id="admin${number}Name">${storedName}</span>
                                 </button>
-                                <h2>Select Telecaller</h2>
-                                <div style="display: flex; flex-direction: column; gap: 20px;">
-                                    <div class="manager-button-container">
-                                        <button id="rameshBtn" class="manager-btn">
-                                            <span class="button-number">1.</span>
-                                            <span id="rameshName">${names.telecallerOne || 'Telecaller 1'}</span>
-                                        </button>
-                                        <span class="edit-icon" id="editRamesh">
-                                            <img src="images/editicon.png" alt="Edit" style="width: 33px; height: 33px;">
-                                        </span>
-                                    </div>
-                                    <div class="manager-button-container">
-                                        <button id="sureshBtn" class="manager-btn">
-                                            <span class="button-number">2.</span>
-                                            <span id="sureshName">${names.telecallerTwo || 'Telecaller 2'}</span>
-                                        </button>
-                                        <span class="edit-icon" id="editSuresh">
-                                            <img src="images/editicon.png" alt="Edit" style="width: 33px; height: 33px;">
-                                        </span>
-                                    </div>
-                                    <div class="manager-button-container">
-                                        <button id="admin3Btn" class="manager-btn">
-                                            <span class="button-number">3.</span>
-                                            <span id="admin3Name">${names.telecallerThree || 'Telecaller 3'}</span>
-                                        </button>
-                                        <span class="edit-icon" id="editAdmin3">
-                                            <img src="images/editicon.png" alt="Edit" style="width: 33px; height: 33px;">
-                                        </span>
-                                    </div>
-                                    <div class="manager-button-container">
-                                        <button id="admin4Btn" class="manager-btn">
-                                            <span class="button-number">4.</span>
-                                            <span id="admin4Name">${names.telecallerFour || 'Telecaller 4'}</span>
-                                        </button>
-                                        <span class="edit-icon" id="editAdmin4">
-                                            <img src="images/editicon.png" alt="Edit" style="width: 33px; height: 33px;">
-                                        </span>
-                                    </div>
-                                    <div class="manager-button-container">
-                                        <button id="admin5Btn" class="manager-btn">
-                                            <span class="button-number">5.</span>
-                                            <span id="admin5Name">${names.telecallerFive || 'Telecaller 5'}</span>
-                                        </button>
-                                        <span class="edit-icon" id="editAdmin5">
-                                            <img src="images/editicon.png" alt="Edit" style="width: 33px; height: 33px;">
-                                        </span>
-                                    </div>
-                                    <div class="manager-button-container">
-                                        <button id="admin6Btn" class="manager-btn">
-                                            <span class="button-number">6.</span>
-                                            <span id="admin6Name">${names.telecallerSix || 'Telecaller 6'}</span>
-                                        </button>
-                                        <span class="edit-icon" id="editAdmin6">
-                                            <img src="images/editicon.png" alt="Edit" style="width: 33px; height: 33px;">
-                                        </span>
-                                    </div>
-                                    <div class="manager-button-container">
-                                        <button id="admin7Btn" class="manager-btn">
-                                            <span class="button-number">7.</span>
-                                            <span id="admin7Name">${names.telecallerSeven || 'Telecaller 7'}</span>
-                                        </button>
-                                        <span class="edit-icon" id="editAdmin7">
-                                            <img src="images/editicon.png" alt="Edit" style="width: 33px; height: 33px;">
-                                        </span>
-                                    </div>
-                                    <div class="manager-button-container">
-                                        <button id="admin8Btn" class="manager-btn">
-                                            <span class="button-number">8.</span>
-                                            <span id="admin8Name">${names.telecallerEight || 'Telecaller 8'}</span>
-                                        </button>
-                                        <span class="edit-icon" id="editAdmin8">
-                                            <img src="images/editicon.png" alt="Edit" style="width: 33px; height: 33px;">
-                                        </span>
-                                    </div>
-                                    <div class="manager-button-container">
-                                        <button id="admin9Btn" class="manager-btn">
-                                            <span class="button-number">9.</span>
-                                            <span id="admin9Name">${names.telecallerNine || 'Telecaller 9'}</span>
-                                        </button>
-                                        <span class="edit-icon" id="editAdmin9">
-                                            <img src="images/editicon.png" alt="Edit" style="width: 33px; height: 33px;">
-                                        </span>
-                                    </div>
-                                    <div class="manager-button-container">
-                                        <button id="admin10Btn" class="manager-btn">
-                                            <span class="button-number">10.</span>
-                                            <span id="admin10Name">${names.telecallerTen || 'Telecaller 10'}</span>
-                                        </button>
-                                        <span class="edit-icon" id="editAdmin10">
-                                            <img src="images/editicon.png" alt="Edit" style="width: 33px; height: 33px;">
-                                        </span>
-                                    </div>
-                                    
-                                </div>
-                                
-                                <div style="text-align: center;">
-                                    <button class="save-button">Save</button>
-                                </div>
+                                <span class="edit-icon" id="editAdmin${number}">
+                                    <img src="images/editicon.png" alt="Edit" style="width: 33px; height: 33px;">
+                                </span>
                             </div>
                         `;
-                        
-                        document.body.appendChild(managerModal);
+                    }).filter(html => html !== '').join(''); // Remove empty strings from excluded buttons
 
-                        // Make all names editable
-                        makeEditable('rameshName', 'editRamesh');
-                        makeEditable('sureshName', 'editSuresh');
-                        for(let i = 3; i <= 10; i++) {
+                    managerModal.innerHTML = `
+                        ${editStyles}
+                        <div class="modal-content">
+                            <button class="back-button" style="position: absolute; top: 15px; left: 15px; background: black; border: none; cursor: pointer; color: white; font-size: 16px; font-weight: 500; padding: 5px 10px; border-radius: 5px;">
+                                ← Back
+                            </button>
+                            <h2>Select Telecaller</h2>
+                            <div style="display: flex; flex-direction: column; gap: 20px;">
+                                ${buttonsHtml}
+                            </div>
+                            <div style="text-align: center; margin-top: 20px;">
+                                <button class="save-button">Save</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(managerModal);
+
+                    // Add back button handler
+                    managerModal.querySelector('.back-button').addEventListener('click', () => {
+                        managerModal.remove();
+                    });
+
+                    // Make names editable (only for non-excluded buttons)
+                    for(let i = 1; i <= 10; i++) {
+                        if (!excludedButtons.includes(i)) {
                             makeEditable(`admin${i}Name`, `editAdmin${i}`);
                         }
+                    }
 
-                        // Add save button functionality
-                        managerModal.querySelector('.save-button').addEventListener('click', async () => {
-                            try {
-                                const names = {
-                                    telecallerOne: document.getElementById('rameshName').textContent,
-                                    telecallerTwo: document.getElementById('sureshName').textContent,
-                                    // Remove the commented out telecallers from the save operation
-                                    // Only save the ones that are actually in use
-                                };
-                                
-                                await namesRef.update(names);
-                                alert('Names saved successfully!');
-                            } catch (error) {
-                                console.error('Error saving names:', error);
-                                alert('Failed to save names. Please try again.');
-                            }
-                        });
-
-                        // Add back button handler
-                        managerModal.querySelector('.back-button').addEventListener('click', () => {
-                            managerModal.remove();
-                        });
-
-                        // Update the handleAdminClick function
-                        const handleAdminClick = async (adminNumber) => {
-                            try {
-                                // Format admin number and prepare emails
-                                const formattedAdminNumber = adminNumber.toString();
-                                const adminEmail = `admin${formattedAdminNumber}@gmail.com`;
-                                const telecallerEmail = `telecaller${formattedAdminNumber}@gmail.com`;
-                                
-                                // 1. Set all necessary localStorage values first
-                                localStorage.setItem('selectedTelecaller', telecallerEmail);
-                                localStorage.setItem('adminEmail', adminEmail);
-                                localStorage.setItem('isManager', 'true');
-                                localStorage.setItem('selectedManagerName', document.getElementById(`${adminNumber === '1' ? 'ramesh' : adminNumber === '2' ? 'suresh' : 'admin' + adminNumber}Name`).textContent);
-                                
-                                // 2. Open dashboard immediately
-                                const dashboardWindow = window.open('maindashboard.html', '_blank');
-                                
-                                // 3. Authenticate in background with proper error handling
-                                try {
-                                    await firebase.auth().signInWithEmailAndPassword(adminEmail, 'admin@123');
-                                    console.log('Authentication successful for:', adminEmail);
-                                    telecallerModal.remove();
-                                } catch (authError) {
-                                    console.error('Detailed auth error:', authError);
-                                    
-                                    // Only close dashboard if it's a critical auth error
-                                    if (authError.code === 'auth/user-not-found' || 
-                                        authError.code === 'auth/wrong-password' ||
-                                        authError.code === 'auth/invalid-email') {
-                                        dashboardWindow.close();
-                                        alert("Authentication failed. Please try again.");
-                                    } else {
-                                        // For other errors, let the dashboard stay open
-                                        console.warn('Non-critical auth error:', authError.message);
+                    // Add save button functionality
+                    managerModal.querySelector('.save-button').addEventListener('click', async () => {
+                        try {
+                            const updatedNames = {};
+                            for(let i = 1; i <= 10; i++) {
+                                if (!excludedButtons.includes(i)) {
+                                    const nameElement = document.getElementById(`admin${i}Name`);
+                                    if (nameElement) {
+                                        updatedNames[`telecaller${getNumberWord(i)}`] = nameElement.textContent;
                                     }
                                 }
-                            } catch (error) {
-                                console.error('Error in handleAdminClick:', error);
-                                alert("An error occurred. Please try again.");
                             }
-                        };
-
-                        // The click handlers remain the same
-                        document.getElementById('rameshBtn').addEventListener('click', () => handleAdminClick('1'));
-                        document.getElementById('sureshBtn').addEventListener('click', () => handleAdminClick('2'));
-                        for(let i = 3; i <= 10; i++) {
-                            document.getElementById(`admin${i}Btn`).addEventListener('click', () => handleAdminClick(i.toString()));
+                            await namesRef.update(updatedNames);
+                            alert('Names saved successfully!');
+                        } catch (error) {
+                            console.error('Error saving names:', error);
+                            alert('Failed to save names. Please try again.');
                         }
                     });
+
+                    // Add click handlers for admin buttons (only for non-excluded buttons)
+                    for(let i = 1; i <= 10; i++) {
+                        if (!excludedButtons.includes(i)) {
+                            const button = document.getElementById(`admin${i}Btn`);
+                            if (button) {
+                                button.addEventListener('click', async () => {
+                                    const adminNumber = i.toString();
+                                    const adminEmail = `admin${adminNumber}@gmail.com`;
+                                    const telecallerEmail = `telecaller${adminNumber}@gmail.com`;
+                                    
+                                    // Set localStorage values first
+                                    localStorage.setItem('selectedTelecaller', telecallerEmail);
+                                    localStorage.setItem('adminEmail', adminEmail);
+                                    localStorage.setItem('isManager', 'true');
+                                    localStorage.setItem('selectedManagerName', document.getElementById(`admin${adminNumber}Name`).textContent);
+                                    
+                                    // Open dashboard immediately
+                                    const dashboardWindow = window.open('maindashboard.html', '_blank');
+                                    
+                                    try {
+                                        await firebase.auth().signInWithEmailAndPassword(adminEmail, 'admin@123');
+                                        managerModal.remove();
+                                    } catch (authError) {
+                                        console.error('Auth error:', authError);
+                                        if (authError.code === 'auth/user-not-found' || 
+                                            authError.code === 'auth/wrong-password' ||
+                                            authError.code === 'auth/invalid-email') {
+                                            dashboardWindow.close();
+                                            alert("Authentication failed. Please try again.");
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    }
+
+                } catch (error) {
+                    console.error('Error fetching names:', error);
+                    alert('Failed to load telecaller names. Please try again.');
+                }
             }
 
             function showTelecallerSelectionModal() {
@@ -1391,7 +1266,7 @@
                 telecallerModal.className = 'modal';
                 telecallerModal.style.display = 'block';
                 
-                const excludedButtons = [3,4,5,6,7,8,9,10]; // Button to exclude
+                const excludedButtons = [,4,5,6,7,8,9,10]; // Button to exclude
                 
                 // Use cached names or empty object if cache not ready
                 const names = cachedNames || {};
@@ -1698,6 +1573,103 @@
             // Immediately restore Google profile
             restoreGoogleProfile();
         };
+
+        // Add these event listeners after your existing DOMContentLoaded event
+        document.addEventListener('DOMContentLoaded', function() {
+            const createAdminBtn = document.getElementById('createAdminBtn');
+            const createAdminModal = document.getElementById('createAdminModal');
+            const createAccountBtn = document.getElementById('createAccountBtn');
+            const passwordModal = document.getElementById('passwordModal');
+            const newPasswordToggle = document.getElementById('newPasswordToggle');
+            const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
+            const newAdminPassword = document.getElementById('newAdminPassword');
+            const confirmAdminPassword = document.getElementById('confirmAdminPassword');
+
+            // Show create admin modal
+            createAdminBtn.addEventListener('click', function() {
+                passwordModal.style.display = 'none';
+                createAdminModal.style.display = 'block';
+            });
+
+            // Handle password visibility toggles
+            newPasswordToggle.addEventListener('click', function() {
+                togglePasswordVisibility(newAdminPassword, newPasswordToggle);
+            });
+
+            confirmPasswordToggle.addEventListener('click', function() {
+                togglePasswordVisibility(confirmAdminPassword, confirmPasswordToggle);
+            });
+
+            // Back button functionality
+            createAdminModal.querySelector('.back-btn').addEventListener('click', function() {
+                createAdminModal.style.display = 'none';
+                passwordModal.style.display = 'block';
+            });
+
+            // Create account functionality
+            createAccountBtn.addEventListener('click', function() {
+                const email = document.getElementById('newAdminEmail').value;
+                const password = newAdminPassword.value;
+                const confirmPassword = confirmAdminPassword.value;
+
+                // Basic validation
+                if (!email || !password || !confirmPassword) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match');
+                    return;
+                }
+
+                try {
+                    // Get all numbers from 1 to 10
+                    const allNumbers = Array.from({length: 10}, (_, i) => i + 1);
+                    
+                    // Find missing numbers (numbers not in excludedButtons)
+                    const missingNumbers = allNumbers.filter(num => !excludedButtons.includes(num));
+                    
+                    // Create the dynamic admin key
+                    const adminKey = `admin${missingNumbers.join('-')}password`;
+
+                    // Store admin credentials in Firebase Realtime Database
+                    firebase.database().ref('adminCredentials').set({
+                        [adminKey]: {
+                            email: email,
+                            password: password
+                        }
+                    })
+                    .then(() => {
+                        alert('Admin account created successfully!');
+                        createAdminModal.style.display = 'none';
+                        passwordModal.style.display = 'block';
+                        
+                        // Clear the form
+                        document.getElementById('newAdminEmail').value = '';
+                        newAdminPassword.value = '';
+                        confirmAdminPassword.value = '';
+                    })
+                    .catch((error) => {
+                        console.error('Firebase error:', error);
+                        alert('Error creating account: ' + error.message);
+                    });
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred while creating the account');
+                }
+            });
+
+            function togglePasswordVisibility(passwordInput, toggleButton) {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    toggleButton.textContent = '🔒';
+                } else {
+                    passwordInput.type = 'password';
+                    toggleButton.textContent = '👁️';
+                }
+            }
+        });
     </script>
     
     <footer style="position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 0.8rem; color: var(--accent-color);">
