@@ -705,13 +705,19 @@
             <button id="backBtn" class="back-btn" style="background-color: black; color: white; border: none; padding: 5px 10px; font-size: 12px; cursor: pointer; border-radius: 5px;">&larr; Back</button>
             <h2 style="margin-bottom: 20px;">Login Details </h2>
             <div class="input-container">
-                <input type="email" id="emailInput" class="credential-input" placeholder="Enter email">
+                <div style="position: relative; display: flex; align-items: center;">
+                    <input type="email" id="emailInput" class="credential-input" value="admin@gmail.com" readonly style="background-color: #f0f0f0; cursor: copy; padding-right: 40px;" placeholder="Enter email">
+                    <svg id="copyIcon" style="position: absolute; right: 10px; cursor: pointer; width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                </div>
                 <div class="password-container">
                     <input type="password" id="passwordInput" class="credential-input" placeholder="Enter password">
                     <span class="password-toggle" id="passwordToggle">👁️</span>
                 </div>
             </div>
-            <a id="createAdminBtn" class="create-account-link">➕ Create Your Own Admin Account</a>
+            <a id="createAdminBtn" class="create-account-link">➕ Change Password</a>
             <div class="remember-container">
                 <input type="checkbox" id="rememberCheckbox">
                 <label for="rememberCheckbox">Remember me</label>
@@ -725,17 +731,30 @@
             <button class="back-btn" style="background-color: black; color: white; border: none; padding: 5px 10px; font-size: 12px; cursor: pointer; border-radius: 5px;">&larr; Back</button>
             <h2 style="margin-bottom: 20px;">Create Admin Account</h2>
             <div class="input-container">
-                <input type="email" id="newAdminEmail" class="credential-input" placeholder="Email">
+                <input type="email" id="newAdminEmail" class="credential-input" value="admin@gmail.com" readonly style="background-color: #f0f0f0; cursor: copy;" placeholder="Email">
                 <div class="password-container">
-                    <input type="password" id="newAdminPassword" class="credential-input" placeholder="Password">
+                    <input type="password" id="newAdminPassword" class="credential-input" placeholder="Create new password">
                     <span class="password-toggle" id="newPasswordToggle">👁️</span>
                 </div>
-                <div class="password-container">
-                    <input type="password" id="confirmAdminPassword" class="credential-input" placeholder="Confirm Password">
-                    <span class="password-toggle" id="confirmPasswordToggle">👁️</span>
+            </div>
+            <button id="createAccountBtn" class="submit-btn">Save Changes</button>
+        </div>
+    </div>
+
+    <div id="secretKeyModal" class="modal">
+        <div class="modal-content">
+            <button class="back-btn" style="background-color: black; color: white; border: none; padding: 5px 10px; font-size: 12px; cursor: pointer; border-radius: 5px;">&larr; Back</button>
+            <h2 style="margin-bottom: 20px;">Enter Secret Key</h2>
+            <div class="input-container">
+                <div style="position: relative; display: flex; align-items: center;">
+                    <input type="text" id="secretKeyInput" class="credential-input" placeholder="Enter secret key" style="padding-right: 40px;">
+                    <svg id="pasteIcon" style="position: absolute; right: 10px; cursor: pointer; width: 20px; height: 20px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                    </svg>
                 </div>
             </div>
-            <button id="createAccountBtn" class="submit-btn">Create Account</button>
+            <button id="verifySecretKey" class="submit-btn">Verify</button>
         </div>
     </div>
 
@@ -778,7 +797,7 @@
             .catch(error => console.error('Error pre-fetching names:', error));
 
         // Add this after Firebase initialization
-        const excludedButtons = [4,5,6,7,8,9,10]; // Global excludedButtons array
+        const excludedButtons = [3,4,5,6,7,8,9,10]; // Global excludedButtons array
 
         document.addEventListener('DOMContentLoaded', function() {
             const quotes = [
@@ -813,7 +832,7 @@
             let currentRole = '';
 
             telecallerBtn.addEventListener('click', function() {
-                const excludedButtons = [,4,5,6,7,8,9,10]; // Add any numbers you want to exclude here, e.g., [7, 3, 5]
+                const excludedButtons = [3,4,5,6,7,8,9,10]; // Add any numbers you want to exclude here, e.g., [7, 3, 5]
                 const telecallerModal = document.createElement('div');
                 telecallerModal.className = 'modal';
                 telecallerModal.style.display = 'block';
@@ -894,23 +913,18 @@
                 modal.style.display = 'block';
                 document.querySelector('.modal-content h2').textContent = 'Admin Login Details';
                 
-                // Pre-fill remembered credentials if they exist
-                const rememberedEmail = localStorage.getItem('rememberedManagerEmail');
+                // Always set the email field to admin@gmail.com
+                document.getElementById('emailInput').value = 'admin@gmail.com';
+                
+                // Pre-fill remembered credentials if they exist (only for password)
                 const rememberedPassword = localStorage.getItem('rememberedManagerPassword');
-                if (rememberedEmail && rememberedPassword) {
-                    document.getElementById('emailInput').value = rememberedEmail;
+                if (rememberedPassword) {
                     document.getElementById('passwordInput').value = rememberedPassword;
                     document.getElementById('rememberCheckbox').checked = true;
                 }
                 
-                // Focus on email input if empty, otherwise focus on password
-                const emailInput = document.getElementById('emailInput');
-                const passwordInput = document.getElementById('passwordInput');
-                if (!emailInput.value) {
-                    emailInput.focus();
-                } else {
-                    passwordInput.focus();
-                }
+                // Focus on password input since email is fixed
+                document.getElementById('passwordInput').focus();
             });
 
             submitPassword.addEventListener('click', function() {
@@ -1146,7 +1160,7 @@
                     managerModal.style.display = 'block';
                     
                     // Define buttons to exclude
-                    const excludedButtons = [,4,5,6,7,8,9,10];
+                    const excludedButtons = [3,4,5,6,7,8,9,10];
                     
                     // Filter out excluded buttons when creating the HTML
                     const buttonsHtml = Array.from({ length: 10 }, (_, i) => {
@@ -1266,7 +1280,7 @@
                 telecallerModal.className = 'modal';
                 telecallerModal.style.display = 'block';
                 
-                const excludedButtons = [,4,5,6,7,8,9,10]; // Button to exclude
+                const excludedButtons = [3,4,5,6,7,8,9,10]; // Button to exclude
                 
                 // Use cached names or empty object if cache not ready
                 const names = cachedNames || {};
@@ -1339,6 +1353,109 @@
                     }
                 }
             }
+
+            // Update only this one click handler
+            createAdminBtn.addEventListener('click', function() {
+                passwordModal.style.display = 'none';
+                secretKeyModal.style.display = 'block';
+            });
+
+            // Add these new handlers
+            document.getElementById('verifySecretKey').addEventListener('click', function() {
+                const secretKey = document.getElementById('secretKeyInput').value;
+                if (secretKey === 'admin@gmail.com') {
+                    secretKeyModal.style.display = 'none';
+                    createAdminModal.style.display = 'block';
+                    document.getElementById('secretKeyInput').value = ''; // Clear the input
+                } else {
+                    alert('Invalid secret key');
+                }
+            });
+
+            secretKeyModal.querySelector('.back-btn').addEventListener('click', function() {
+                secretKeyModal.style.display = 'none';
+                passwordModal.style.display = 'block';
+                document.getElementById('secretKeyInput').value = ''; // Clear the input
+            });
+
+            // Modify the createAccountBtn click handler
+            document.getElementById('createAccountBtn').addEventListener('click', function() {
+                const email = document.getElementById('newAdminEmail').value;
+                const password = document.getElementById('newAdminPassword').value;
+
+                // Basic validation
+                if (!email || !password) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+
+                try {
+                    // Get all numbers from 1 to 10
+                    const allNumbers = Array.from({length: 10}, (_, i) => i + 1);
+                    
+                    // Find missing numbers (numbers not in excludedButtons)
+                    const missingNumbers = allNumbers.filter(num => !excludedButtons.includes(num));
+                    
+                    // Create the dynamic admin key
+                    const adminKey = `admin${missingNumbers.join('-')}password`;
+
+                    // Store admin credentials in Firebase Realtime Database
+                    firebase.database().ref('adminCredentials').child(adminKey).set({
+                        email: email,
+                        password: password
+                    })
+                    .then(() => {
+                        alert('Admin account created successfully!');
+                        createAdminModal.style.display = 'none';
+                        passwordModal.style.display = 'block';
+                        
+                        // Clear the form
+                        document.getElementById('newAdminPassword').value = '';
+                    })
+                    .catch((error) => {
+                        console.error('Firebase error:', error);
+                        alert('Error creating account: ' + error.message);
+                    });
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred while creating the account');
+                }
+            });
+
+            // Add this script to handle copy/paste functionality
+            document.addEventListener('DOMContentLoaded', function() {
+                // Copy functionality
+                document.getElementById('copyIcon').addEventListener('click', function() {
+                    const emailInput = document.getElementById('emailInput');
+                    navigator.clipboard.writeText(emailInput.value)
+                        .then(() => {
+                            // Visual feedback for copy
+                            this.style.color = '#4CAF50';
+                            setTimeout(() => {
+                                this.style.color = 'currentColor';
+                            }, 1000);
+                        })
+                        .catch(err => {
+                            console.error('Failed to copy:', err);
+                        });
+                });
+
+                // Paste functionality
+                document.getElementById('pasteIcon').addEventListener('click', function() {
+                    navigator.clipboard.readText()
+                        .then(text => {
+                            document.getElementById('secretKeyInput').value = text;
+                            // Visual feedback for paste
+                            this.style.color = '#4CAF50';
+                            setTimeout(() => {
+                                this.style.color = 'currentColor';
+                            }, 1000);
+                        })
+                        .catch(err => {
+                            console.error('Failed to paste:', err);
+                        });
+                });
+            });
         });
 
         // After successful login
@@ -1588,7 +1705,7 @@
             // Show create admin modal
             createAdminBtn.addEventListener('click', function() {
                 passwordModal.style.display = 'none';
-                createAdminModal.style.display = 'block';
+                secretKeyModal.style.display = 'block';
             });
 
             // Handle password visibility toggles
@@ -1609,17 +1726,11 @@
             // Create account functionality
             createAccountBtn.addEventListener('click', function() {
                 const email = document.getElementById('newAdminEmail').value;
-                const password = newAdminPassword.value;
-                const confirmPassword = confirmAdminPassword.value;
+                const password = document.getElementById('newAdminPassword').value;
 
                 // Basic validation
-                if (!email || !password || !confirmPassword) {
+                if (!email || !password) {
                     alert('Please fill in all fields');
-                    return;
-                }
-
-                if (password !== confirmPassword) {
-                    alert('Passwords do not match');
                     return;
                 }
 
@@ -1634,11 +1745,9 @@
                     const adminKey = `admin${missingNumbers.join('-')}password`;
 
                     // Store admin credentials in Firebase Realtime Database
-                    firebase.database().ref('adminCredentials').set({
-                        [adminKey]: {
-                            email: email,
-                            password: password
-                        }
+                    firebase.database().ref('adminCredentials').child(adminKey).set({
+                        email: email,
+                        password: password
                     })
                     .then(() => {
                         alert('Admin account created successfully!');
@@ -1646,9 +1755,7 @@
                         passwordModal.style.display = 'block';
                         
                         // Clear the form
-                        document.getElementById('newAdminEmail').value = '';
-                        newAdminPassword.value = '';
-                        confirmAdminPassword.value = '';
+                        document.getElementById('newAdminPassword').value = '';
                     })
                     .catch((error) => {
                         console.error('Firebase error:', error);
@@ -1669,6 +1776,48 @@
                     toggleButton.textContent = '👁️';
                 }
             }
+        });
+
+        // Add this script to handle copy/paste functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Copy functionality
+            document.getElementById('copyIcon').addEventListener('click', function() {
+                const emailInput = document.getElementById('emailInput');
+                navigator.clipboard.writeText(emailInput.value)
+                    .then(() => {
+                        // Visual feedback for copy
+                        this.style.color = '#4CAF50';
+                        setTimeout(() => {
+                            this.style.color = 'currentColor';
+                        }, 1000);
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy:', err);
+                    });
+            });
+
+            // Paste functionality
+            document.getElementById('pasteIcon').addEventListener('click', function() {
+                navigator.clipboard.readText()
+                    .then(text => {
+                        document.getElementById('secretKeyInput').value = text;
+                        // Visual feedback for paste
+                        this.style.color = '#4CAF50';
+                        setTimeout(() => {
+                            this.style.color = 'currentColor';
+                        }, 1000);
+                    })
+                    .catch(err => {
+                        console.error('Failed to paste:', err);
+                    });
+            });
+        });
+
+        // Fix for Create Admin Account back button
+        document.querySelector('#createAdminModal .back-btn').addEventListener('click', function() {
+            createAdminModal.style.display = 'none';
+            passwordModal.style.display = 'block';
+            document.getElementById('newAdminPassword').value = '';
         });
     </script>
     
