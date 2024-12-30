@@ -12,6 +12,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <!-- Add this line for Firebase Database -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Add this right after your Firebase scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <!-- Add these lines right after the existing meta tags -->
     <meta name="theme-color" content="#000000">
     <link rel="manifest" href="manifest.json">
@@ -661,6 +663,187 @@
             color: #0052a3;
             transform: scale(1.02);
         }
+
+        .admin-email-container {
+            margin-left: 15px;
+            flex: 0 1 200px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .admin-email-input {
+            width: 100%;
+            height: 32px;
+            padding: 6px 30px 6px 10px;
+            border: 1px solid var(--accent-color);
+            border-radius: 4px;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            font-size: 13px;
+        }
+
+        .save-email-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            color: var(--accent-color);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .save-email-icon:hover {
+            color: var(--secondary-color);
+        }
+
+        .save-email-icon.saved {
+            color: #4CAF50;
+        }
+
+        /* Add these styles for the success message */
+        .success-message {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 9999;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 250px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .success-message.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .success-message svg {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* Update email input styles for better visibility */
+        .admin-email-container {
+            margin-left: 15px;
+            flex: 0 1 200px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .admin-email-input {
+            width: 100%;
+            height: 32px;
+            padding: 6px 30px 6px 10px;
+            border: 1px solid var(--accent-color);
+            border-radius: 4px;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            font-size: 13px;
+        }
+
+        /* Update the email input and checkmark styles */
+        .email-input-wrapper {
+            position: relative;
+            width: 100%;
+            height: 32px;
+        }
+
+        .admin-email-input {
+            width: 100%;
+            height: 100%;
+            padding: 6px 35px 6px 12px; /* Increased right padding for icon */
+            border: 1px solid var(--accent-color);
+            border-radius: 4px;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            font-size: 13px;
+        }
+
+        .save-email-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            color: var(--accent-color);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        /* Update success message styles */
+        .success-message {
+            position: fixed;
+            top: 80px; /* Position below navbar */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 9999;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .success-message.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #otpVerificationModal .modal-content {
+            max-width: 400px;
+            text-align: center;
+        }
+
+        #otpInput {
+            letter-spacing: 2px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .success-message {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-message.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -669,6 +852,20 @@
             <div class="bar"></div>
             <div class="bar"></div>
             <div class="bar"></div>
+        </div>
+        <div class="admin-email-container">
+            <div class="email-input-wrapper">
+                <input 
+                    type="email" 
+                    id="globalAdminEmail" 
+                    placeholder="Set Admin Email"
+                    class="admin-email-input"
+                    value="admin@gmail.com"
+                >
+                <svg id="saveEmailBtn" class="save-email-icon" viewBox="0 0 24 24" width="24" height="24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>
+                </svg>
+            </div>
         </div>
         <div class="nav-menu" id="navMenu">
             <a href="about.html">About</a>
@@ -758,6 +955,24 @@
         </div>
     </div>
 
+    <div id="otpVerificationModal" class="modal">
+        <div class="modal-content">
+            <h2>Verify OTP</h2>
+            <p style="margin-bottom: 20px; color: #666;">Please enter the OTP sent to your email</p>
+            <div class="input-container">
+                <input type="text" id="otpInput" class="credential-input" placeholder="Enter OTP" maxlength="6">
+            </div>
+            <button id="verifyOtpBtn" class="submit-btn">Verify OTP</button>
+        </div>
+    </div>
+
+    <div id="successMessage" class="success-message">
+        <svg viewBox="0 0 24 24" width="20" height="20" style="margin-right: 8px;">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>
+        </svg>
+        <span>Password changed successfully!</span>
+    </div>
+
     <script>
         // Initialize Firebase
         const firebaseConfig = {
@@ -798,6 +1013,104 @@
 
         // Add this after Firebase initialization
         const excludedButtons = [3,4,5,6,7,8,9,10]; // Global excludedButtons array
+
+        // Add this right after your Firebase initialization
+        let hamburgerPressTimer;
+
+        // Add these event listeners for the hamburger menu
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.getElementById('hamburger');
+            const navMenu = document.getElementById('navMenu');
+            const adminEmailContainer = document.querySelector('.admin-email-container');
+            const saveEmailBtn = document.getElementById('saveEmailBtn');
+            
+            // Initially hide the email container
+            adminEmailContainer.style.display = 'none';
+            
+            let pressTimer = null;
+            let isLongPress = false;
+            let pressStartTime = 0;
+            
+            // Handle mousedown/touchstart
+            function startPress(e) {
+                pressStartTime = Date.now();
+                pressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    adminEmailContainer.style.display = 'block';
+                    adminEmailContainer.style.opacity = '1';
+                }, 3000);
+            }
+            
+            // Handle mouseup/touchend
+            function endPress(e) {
+                const pressDuration = Date.now() - pressStartTime;
+                clearTimeout(pressTimer);
+                
+                // If it was a short press (click), toggle menu
+                if (pressDuration < 3000) {
+                    navMenu.classList.toggle('open');
+                    hamburger.classList.toggle('open');
+                }
+                
+                // Reset long press flag after a short delay
+                setTimeout(() => {
+                isLongPress = false;
+                }, 100);
+            }
+            
+            hamburger.addEventListener('mousedown', startPress);
+            hamburger.addEventListener('touchstart', startPress);
+            hamburger.addEventListener('mouseup', endPress);
+            hamburger.addEventListener('touchend', endPress);
+            hamburger.addEventListener('mouseleave', clearTimeout.bind(null, pressTimer));
+
+            // Success message function
+            function showSuccessMessage() {
+                const successMsg = document.createElement('div');
+                successMsg.className = 'success-message';
+                successMsg.textContent = 'Email updated successfully!';
+                document.body.appendChild(successMsg);
+
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    successMsg.classList.add('show');
+                });
+
+                // Remove after delay
+                setTimeout(() => {
+                    successMsg.classList.remove('show');
+                    setTimeout(() => successMsg.remove(), 300);
+                }, 2000);
+            }
+
+            // Save email handler
+            saveEmailBtn.addEventListener('click', function() {
+                const newEmail = document.getElementById('globalAdminEmail').value || 'admin@gmail.com';
+                updateEmailFields(newEmail);
+                
+                // Create and show success message
+                const successMsg = document.createElement('div');
+                successMsg.className = 'success-message';
+                successMsg.innerHTML = `
+                    <svg viewBox="0 0 24 24" width="20" height="20" style="margin-right: 8px; vertical-align: middle;">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor"/>
+                    </svg>
+                    Email updated successfully!
+                `;
+                document.body.appendChild(successMsg);
+
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    successMsg.classList.add('show');
+                });
+
+                // Remove after delay
+                setTimeout(() => {
+                    successMsg.classList.remove('show');
+                    setTimeout(() => successMsg.remove(), 300);
+                }, 2000);
+            });
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             const quotes = [
@@ -908,13 +1221,13 @@
             });
 
             marketingManagerBtn.addEventListener('click', function() {
-                // Show login modal instantly
                 const modal = document.getElementById('passwordModal');
                 modal.style.display = 'block';
                 document.querySelector('.modal-content h2').textContent = 'Admin Login Details';
                 
-                // Always set the email field to admin@gmail.com
-                document.getElementById('emailInput').value = 'admin@gmail.com';
+                // Use the stored email or default to admin@gmail.com
+                const storedEmail = localStorage.getItem('globalAdminEmail') || 'admin@gmail.com';
+                document.getElementById('emailInput').value = storedEmail;
                 
                 // Pre-fill remembered credentials if they exist (only for password)
                 const rememberedPassword = localStorage.getItem('rememberedManagerPassword');
@@ -1357,7 +1670,7 @@
             // Update only this one click handler
             createAdminBtn.addEventListener('click', function() {
                 passwordModal.style.display = 'none';
-                secretKeyModal.style.display = 'block';
+                createAdminModal.style.display = 'block';
             });
 
             // Add these new handlers
@@ -1405,7 +1718,7 @@
                         password: password
                     })
                     .then(() => {
-                        alert('Admin account created successfully!');
+                        // alert('Admin account created successfully!');
                         createAdminModal.style.display = 'none';
                         passwordModal.style.display = 'block';
                         
@@ -1705,7 +2018,7 @@
             // Show create admin modal
             createAdminBtn.addEventListener('click', function() {
                 passwordModal.style.display = 'none';
-                secretKeyModal.style.display = 'block';
+                createAdminModal.style.display = 'block';
             });
 
             // Handle password visibility toggles
@@ -1750,7 +2063,7 @@
                         password: password
                     })
                     .then(() => {
-                        alert('Admin account created successfully!');
+                        // alert('Admin account created successfully!');
                         createAdminModal.style.display = 'none';
                         passwordModal.style.display = 'block';
                         
@@ -1818,6 +2131,242 @@
             createAdminModal.style.display = 'none';
             passwordModal.style.display = 'block';
             document.getElementById('newAdminPassword').value = '';
+        });
+
+        // Find these existing event listeners and modify them
+        document.addEventListener('DOMContentLoaded', function() {
+            const globalAdminEmail = document.getElementById('globalAdminEmail');
+            const saveEmailBtn = document.getElementById('saveEmailBtn');
+            
+            // Function to update email fields
+            function updateEmailFields(newEmail) {
+                // Update email in login modal (admin login details)
+                const emailInput = document.getElementById('emailInput');
+                if (emailInput) {
+                    emailInput.value = newEmail;
+                    emailInput.setAttribute('value', newEmail); // Ensure the value attribute is also updated
+                }
+                
+                // Update email in create admin modal (password change)
+                const newAdminEmail = document.getElementById('newAdminEmail');
+                if (newAdminEmail) {
+                    newAdminEmail.value = newEmail;
+                    newAdminEmail.setAttribute('value', newEmail);
+                }
+                
+                // Store in localStorage
+                localStorage.setItem('globalAdminEmail', newEmail);
+                
+                // Show success feedback
+                saveEmailBtn.classList.add('saved');
+                setTimeout(() => {
+                    saveEmailBtn.classList.remove('saved');
+                }, 2000);
+            }
+
+            // Save email when checkmark is clicked
+            saveEmailBtn.addEventListener('click', function() {
+                const newEmail = globalAdminEmail.value || 'admin@gmail.com';
+                updateEmailFields(newEmail);
+            });
+
+            // Load saved email on page load
+            const savedEmail = localStorage.getItem('globalAdminEmail');
+            if (savedEmail) {
+                globalAdminEmail.value = savedEmail;
+            }
+        });
+
+        // Initialize EmailJS with your public key
+        emailjs.init("MjFZTQvnIViDYN_Gr");
+
+        // Generate random 6-digit OTP
+        function generateOTP() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        // Modified sendOTP function
+        async function sendOTP(email, otp) {
+            try {
+                console.log('Attempting to send OTP to:', email); // Debug log
+                
+                const response = await emailjs.send(
+                    "service_zw6r0e6",     // Your service ID
+                    "template_rz3x4yg",    // Your template ID
+                    {
+                        to_email: email,
+                        otp: otp,
+                        from_name: "Google Security"
+                    }
+                );
+                
+                console.log('EmailJS Response:', response); // Debug log
+                return true;
+            } catch (error) {
+                console.error('Error sending OTP:', error);
+                alert('Failed to send OTP. Please try again.');
+                return false;
+            }
+        }
+
+        // Modify the create account button handler
+        document.getElementById('createAccountBtn').addEventListener('click', async function() {
+            // Get the fixed email from the input field
+            const emailInput = document.getElementById('emailInput');
+            const email = emailInput.value;
+            const password = document.getElementById('newAdminPassword').value;
+
+            if (!email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            try {
+                // Generate OTP first
+                const otp = generateOTP();
+                
+                // Try to send OTP
+                const otpSent = await sendOTP(email, otp);
+                
+                if (otpSent) {
+                    // Store OTP for verification
+                    localStorage.setItem('currentOTP', otp);
+                    
+                    // Hide current modal and show OTP verification modal
+                    document.getElementById('createAdminModal').style.display = 'none';
+                    document.getElementById('otpVerificationModal').style.display = 'block';
+                    
+                    // Focus on OTP input
+                    document.getElementById('otpInput').focus();
+                } else {
+                    throw new Error('Failed to send OTP');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to send verification code. Please try again.');
+            }
+        });
+
+        // Add OTP verification handler
+        document.getElementById('verifyOtpBtn').addEventListener('click', function() {
+            const enteredOTP = document.getElementById('otpInput').value;
+            const storedOTP = localStorage.getItem('currentOTP');
+            const email = document.getElementById('emailInput').value;
+            const password = document.getElementById('newAdminPassword').value;
+
+            if (enteredOTP === storedOTP) {
+                // Save the credentials to Firebase
+                const allNumbers = Array.from({length: 10}, (_, i) => i + 1);
+                const missingNumbers = allNumbers.filter(num => !excludedButtons.includes(num));
+                const adminKey = `admin${missingNumbers.join('-')}password`;
+
+                firebase.database().ref('adminCredentials').child(adminKey).set({
+                    email: email,
+                    password: password
+                }).then(() => {
+                    // Show success message
+                    const successMessage = document.getElementById('successMessage');
+                    successMessage.classList.add('show');
+                    
+                    // Clear fields and close modals
+                    document.getElementById('otpInput').value = '';
+                    localStorage.removeItem('currentOTP');
+                    document.getElementById('otpVerificationModal').style.display = 'none';
+                    
+                    // Show success message and return to password modal
+                    setTimeout(() => {
+                        successMessage.classList.remove('show');
+                        document.getElementById('passwordModal').style.display = 'block';
+                    }, 2000);
+                }).catch(error => {
+                    console.error('Error saving credentials:', error);
+                    alert('Failed to save credentials. Please try again.');
+                });
+            } else {
+                alert('Invalid OTP. Please try again.');
+            }
+        });
+
+        // Add this right after your Firebase initialization
+        const globalEmailRef = firebase.database().ref('systemConfig/globalAdminEmail');
+
+        // Modify the existing updateEmailFields function
+            function updateEmailFields(newEmail) {
+            // Update UI fields
+                const emailInput = document.getElementById('emailInput');
+                const newAdminEmail = document.getElementById('newAdminEmail');
+            
+                if (emailInput) {
+                    emailInput.value = newEmail;
+                emailInput.setAttribute('value', newEmail);
+                emailInput.readOnly = true;
+                }
+                
+                if (newAdminEmail) {
+                    newAdminEmail.value = newEmail;
+                    newAdminEmail.setAttribute('value', newEmail);
+                newAdminEmail.readOnly = true;
+            }
+            
+            // Save to Firebase
+            globalEmailRef.set(newEmail)
+                    .then(() => {
+                // Show success feedback
+            const saveEmailBtn = document.getElementById('saveEmailBtn');
+                    if (saveEmailBtn) {
+                saveEmailBtn.classList.add('saved');
+                setTimeout(() => {
+                    saveEmailBtn.classList.remove('saved');
+                }, 2000);
+            }
+                })
+                .catch(error => {
+                    console.error('Error saving email:', error);
+                    alert('Failed to save email. Please try again.');
+                });
+        }
+
+        // Add this to fetch and set email on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            globalEmailRef.once('value')
+                .then(snapshot => {
+                    const savedEmail = snapshot.val() || 'admin@gmail.com';
+                    
+                    // Update global admin email input
+            const globalAdminEmail = document.getElementById('globalAdminEmail');
+                    if (globalAdminEmail) {
+                globalAdminEmail.value = savedEmail;
+            }
+                    
+                    // Update both modal email fields
+                    updateEmailFields(savedEmail);
+                })
+                .catch(error => {
+                    console.error('Error fetching email:', error);
+                });
+        });
+
+        // Update the save email click handler
+        document.getElementById('saveEmailBtn').addEventListener('click', function() {
+            const newEmail = document.getElementById('globalAdminEmail').value || 'admin@gmail.com';
+                updateEmailFields(newEmail);
+            });
+
+        // Add real-time listener for email changes
+        globalEmailRef.on('value', snapshot => {
+            const email = snapshot.val() || 'admin@gmail.com';
+                const emailInput = document.getElementById('emailInput');
+                const newAdminEmail = document.getElementById('newAdminEmail');
+            
+                if (emailInput) {
+                emailInput.value = email;
+                emailInput.setAttribute('value', email);
+                }
+                
+                if (newAdminEmail) {
+                newAdminEmail.value = email;
+                newAdminEmail.setAttribute('value', email);
+            }
         });
     </script>
     
