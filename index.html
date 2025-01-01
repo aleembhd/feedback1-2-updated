@@ -2307,8 +2307,9 @@
         // Add this function for isolated Google Authentication
         function authenticatePasswordChange(email) {
             const provider = new firebase.auth.GoogleAuthProvider();
+            
             provider.setCustomParameters({
-                prompt: 'select_account',
+                prompt: 'login',  // This forces the sign-in page for new users
                 login_hint: email
             });
             
